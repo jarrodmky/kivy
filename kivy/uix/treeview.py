@@ -395,10 +395,51 @@ class TreeView(Widget):
                node.y <= y <= node.top:
                 return node
 
+    def iterate_visible_nodes_df(self, node=None):
+        '''Generator to depth-first iterate over all the expanded
+        nodes and their children, starting from `node` and down. 
+        If `node` is `None`, the generator start with :attr:`root`.
+
+        To get all the visible nodes::
+
+            treeview = TreeView()
+            # ... add nodes ...
+            for node in treeview.iterate_visible_nodes():
+                print(node)
+
+        '''
+        if not node:
+            node = self.root
+        if self.hide_root and node is self.root:
+            pass
+        else:
+            yield node
+        if not node.is_open:
+            return
+        f = self.iterate_open_nodes
+        for cnode in node.nodes:
+            for ynode in f(cnode):
+                yield ynode
+
     def iterate_open_nodes(self, node=None):
-        '''Generator to iterate over all the expended nodes starting from
-        `node` and down. If `node` is `None`, the generator start with
-        :attr:`root`.
+        '''Generator to depth-first iterate over all the expanded
+        nodes and their children, starting from `node` and down. 
+        If `node` is `None`, the generator start with :attr:`root`.
+
+        To get all the visible nodes::
+
+            treeview = TreeView()
+            # ... add nodes ...
+            for node in treeview.iterate_visible_nodes():
+                print(node)
+
+        '''
+        return self.iterate_visible_nodes_df(node)
+
+    def iterate_open_nodes_df(self, node=None):
+        '''Generator to depth-first iterate over all the open nodes 
+        starting from `node` and down. If `node` is `None`, the 
+        generator start with :attr:`root`.
 
         To get all the open nodes::
 
@@ -422,17 +463,38 @@ class TreeView(Widget):
                 yield ynode
 
     def iterate_all_nodes(self, node=None):
-        '''Generator to iterate over all nodes from `node` and down whether
-        expanded or not. If `node` is `None`, the generator start with
-        :attr:`root`.
+        '''Generator to depth-first iterate over all nodes from 
+        `node` and down whether expanded or not. If `node` is 
+        `None`, the generator start with :attr:`root`.
+        '''
+        self.iterate_all_nodes_df(node)
+
+    def iterate_all_nodes_df(self, node=None):
+        '''Generator to depth-first iterate over all nodes from 
+        `node` and down whether expanded or not. If `node` is 
+        `None`, the generator start with :attr:`root`.
         '''
         if not node:
             node = self.root
         yield node
-        f = self.iterate_all_nodes
+        f = self.iterate_all_nodes_df
         for cnode in node.nodes:
             for ynode in f(cnode):
                 yield ynode
+
+    def iterate_all_nodes_bf(self, node=None):
+        '''Generator to breadth-first iterate over all nodes from 
+        `node` and down whether expanded or not. If `node` is 
+        `None`, the generator start with :attr:`root`.
+        '''
+        if not node:
+            node = self.root
+        queue = [node]
+        while queue:
+            current_node = queue.pop(0)
+            yield current_node
+            for child in current_node.nodes:
+                queue.append(child)
 
     #
     # Private
